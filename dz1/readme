@@ -1,0 +1,6 @@
+Done two ways:
+1) mapper_1.py + reducer_1.py (as in homework pdf)
+2) mapper.py + reducer.py
+
+
+calculates var and mean in one map_reduce job
