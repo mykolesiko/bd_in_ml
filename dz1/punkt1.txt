@@ -1,0 +1,17 @@
+1. hdfs dfs -mkdir /e.savkina
+2. hdfs dfs -mkdir -p  /e.savkina/folder1/folder2
+3. Trash - это корзина. Минуя trash  - с флагом -skipTrash
+4. hdfs dfs -touchz /e.savkina/temp.txt
+5. hdfs dfs -rm -R -skipTrash /e.savkina/temp.txt
+6. hdfs dfs -rm -R -skipTrash /e.savkina/folder1/folder2
+   hdfs dfs -rm -R -skipTrash /e.savkina/folder1
+1. hdfs dfs -put local.txt /e.savkina/
+2. hdfs dfs -cat /e.savkina/local.txt
+3. hdfs dfs -tail /e.savkina/local.txt
+4. hdfs dfs -cat /e.savkina/local.txt | head -n 2
+5. hdfs dfs -cp /e.savkina/local.txt /e.savkina/local1.txt
+6. hdfs dfs -setrep -w 2 /e.savkina/local.txt
+7. hdfs fsck /e.savkina/local.txt -files -blocks -locations
+8. hdfs fsck -blockId blk_1073741832
+
+
