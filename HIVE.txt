@@ -1,0 +1,76 @@
+CREATE TABLE artists_table ( mbid string, artist_mb string, artist_lastfm string, 
+country_mb string, country_lastfm string, tags_mb string, tags_lastfm string, 
+listeners_lastfm int, scrobbles_lastfm int, ambiguous_artist boolean) 
+ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' LINES TERMINATED BY '\n' TBLPROPERTIES ("skip.header.line.count" = "1");
+
+
+LOAD DATA LOCAL INPATH '/opt/hive/examples/files/artists.csv' OVERWRITE INTO TABLE artists_table;
+
+SELECT artist_lastfm, scrobbles_lastfm FROM artists_table t1 
+JOIN (SELECT MAX(scrobbles_lastfm) as max_scrobbles FROM artists_table) t2
+ON t1.scrobbles_lastfm = t2.max_scrobbles;
+
++----------------+-------------------+
+| artist_lastfm  | scrobbles_lastfm  |
++----------------+-------------------+
+| The Beatles    | 517126254         |
++----------------+-------------------+
+
+
+SELECT tag, COUNT(*) AS tag_count FROM artists_table 
+LATERAL VIEW EXPLODE(SPLIT(tags_lastfm, ';')) tmp AS tag
+WHERE tag != '' GROUP BY tag ORDER BY tag_count DESC LIMIT 1;
+
+
++------------------------+------------+
+|          tag           | tag_count  |
++------------------------+------------+
+|  seen live             | 81278      |
+|  rock                  | 64902      |
+|  electronic            | 58163      |
+|  All                   | 48631      |
+|  under 2000 listeners  | 48301      |
+|  alternative           | 42067      |
+|  pop                   | 41557      |
+|  indie                 | 39333      |
+|  experimental          | 37665      |
+|  female vocalists      | 33097      |
++------------------------+------------+
+
+SELECT artist_lastfm, T1.tag as tag FROM  (SELECT artist_lastfm,  tag, scrobbles_lastfm FROM artists_table LATERAL VIEW EXPLODE(SPLIT(tags_lastfm, ';')) tmp1 AS tag) T1
+JOIN (SELECT tag, MAX(scrobbles_lastfm) AS max_scrobbles, COUNT(*) as tag_count FROM artists_table 
+LATERAL VIEW EXPLODE(SPLIT(tags_lastfm, ';')) tmp2 AS tag  WHERE tag != '' GROUP BY tag ORDER BY tag_count DESC LIMIT 10) T2
+ON T1.tag = T2.tag AND T1.scrobbles_lastfm = T2.max_scrobbles LIMIT 10;
+
+
++----------------+------------------------+
+| artist_lastfm  |          tag           |
++----------------+------------------------+
+| Coldplay       |  alternative           |
+| Radiohead      |  indie                 |
+| Radiohead      |  electronic            |
+| Radiohead      |  seen live             |
+| Radiohead      |  experimental          |
+| Lady Gaga      |  female vocalists      |
+| The Beatles    |  rock                  |
+| The Beatles    |  pop                   |
+| Ariana Grande  |  All                   |
+| Joyce Manor    |  under 2000 listeners  |
++----------------+------------------------+
+
+SELECT artist_lastfm, listeners_lastfm FROM artists_table ORDER BY listeners_lastfm DESC LIMIT 10;
+
++------------------------+-------------------+
+|     artist_lastfm      | listeners_lastfm  |
++------------------------+-------------------+
+| Coldplay               | 5381567           |
+| Radiohead              | 4732528           |
+| Red Hot Chili Peppers  | 4620835           |
+| Rihanna                | 4558193           |
+| Eminem                 | 4517997           |
+| The Killers            | 4428868           |
+| Kanye West             | 4390502           |
+| Nirvana                | 4272894           |
+| Muse                   | 4089612           |
+| Queen                  | 4023379           |
++------------------------+-------------------+
