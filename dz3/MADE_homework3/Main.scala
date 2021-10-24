@@ -37,15 +37,16 @@ object Main {
       //val d = new File("./heart1.csv")
       //print(d.getAbsolutePath())
 
-      val mat=csvread(new File("./winequality-red.csv"),';')
+      val mat1=csvread(new File("./winequality_train.csv"),';')
+      val mat2=csvread(new File("./winequality_test.csv"),';')
 
-      val size  = mat.rows
-      val train_size = 1000//(size * 0.8)
+      //val size  = mat.rows
+      //val train_size = 1000//(size * 0.8)
 
-      val X_train = mat(0 to train_size, 0 to -2)
-      val X_test = mat(train_size to -1, 0 to -2)
-      val y_train = mat(0 to train_size, -1)
-      val y_test = mat(train_size to -1, -1)
+      val X_train = mat1(::, 0 to -2)
+      val X_test = mat2(::, 0 to -2)
+      val y_train = mat1(::, -1)
+      val y_test = mat2(::, -1)
 
       var model = new LinearRegression()
       model.fit(X_train, y_train)
@@ -56,6 +57,6 @@ object Main {
       println(f"MSE = $metrics")
 
 
-      csvwrite(new File("D://winequality_result.csv"), y_pred.asDenseMatrix, ';')
+      csvwrite(new File("./winequality_result.csv"), y_pred.asDenseMatrix, ';')
     }
 }
