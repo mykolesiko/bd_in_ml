@@ -27,7 +27,7 @@ val removeChars = functions.udf { (s: String) => {
 
 val df1 = df.select(removeChars(col("Review")).as("Review_new"))//, removeChars(col("Review")))
 
-df1.show
+//df1.show
 
 val df2 = df1
   .select(lower(col("Review_new")).as("Review lower")) //.drop("name")
@@ -35,7 +35,7 @@ val df2 = df1
   .withColumn("doc_id", monotonically_increasing_id())
 
 
-df2.show
+//df2.show
 
 val df3 = df2.withColumn("Words_list", explode(df2.col("Words_list")))
 
@@ -49,9 +49,9 @@ val tf = df3.groupBy("doc_id" , "Words_list")
 val words_in_doc = df3.groupBy("doc_id")
   .agg(count("doc_id") as "words_in_doc1")
 
-//words_in_doc.show
+words_in_doc.show
 
-tf.show
+//tf.show
 //val tf1 = tf
 
 val tf1 = tf
@@ -63,7 +63,7 @@ val dff = df3.groupBy("Words_list")
 
 val dff_new = dff.orderBy(desc("df")).limit(100)
 
-dff_new.show
+//dff_new.show
 
 def calcIdf  (d : Int) : Double = {
    log((doc_num + 1)/(d + 1))
@@ -73,13 +73,30 @@ val calcIdfUdf = functions.udf { (d: Int) => calcIdf(d) }
 val dff_new1 = dff_new.withColumn("idf", calcIdfUdf(col("df")).cast("Double"))
 
 
-dff_new1.show
+//dff_new1.show
 
 val all = tf1
   .join(dff_new1, Seq("Words_list"), "inner")
   .withColumn("tf_idf", col("tf") * col("idf"))
-  .select(col("Words_list") as "word", col("tf_idf"))
+  .select(col("doc_id"), col("Words_list") as "word", col("tf_idf"))
 
 
+//all.show
 
-all.show
+
+val all_pivot = all.groupBy("doc_id")
+  .pivot(col("word"))
+  .agg(first(col("tf_idf"), ignoreNulls = true))
+  .na.fill(0.0)
+
+
+all_pivot.show
+
+all_pivot
+  .coalesce(1)
+  .write
+  .option("header", "true")
+  .option("sep", ",")
+  .csv("tfidf.csv")
+
+
